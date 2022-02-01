@@ -1,4 +1,11 @@
 # nodejs_login_app
+## ログイン情報
+```
+ユーザーID: admin
+パスワード: password
+```
+
+## 参考にした記事
 
 ### べースコード<br>
 Node.JSとPassportを使って認証処理を実装する方法<br>
