@@ -8,6 +8,9 @@
 </head>
 
 <body>
+  <% if(messages.error){ %>
+  <div class="" role="alert"><%=messages.error[0] %></div><br />
+  <% } %>
   <div class="container" style="padding: 1.25rem;">
     <div class="card">
       <h5 class="card-header">ログイン</h5>

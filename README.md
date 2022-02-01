@@ -16,3 +16,7 @@ https://blog.capilano-fw.com/?p=5655#i-9
 ### ハッシュ化されたパスワードの比較<br>
 Node.jsによるWebアプリケーション作成入門<br>
 https://zenn.dev/wkb/books/node-tutorial
+
+### 実際の実装では以下の記事を参考にした方がきれいなコードが書けそう
+コピペでOK！Expressにログイン機能をつくる<br>
+https://blog.capilano-fw.com/?p=5655

@@ -1,37 +1,28 @@
-var express = require("express");
+const express = require("express");
+const flash = require("express-flash");
+const passport = require("passport");
+const session = require("express-session");
+const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
-var app = express();
+const LocalStrategy = require("passport-local");
 
-var passport = require("passport");
+const app = express();
+
+app.use(flash());
 app.use(passport.initialize());
-
-var session = require("express-session");
 app.use(session({ secret: "123456" }));
 app.use(passport.session());
-
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function (user, done) {
-  // User.findById(id, function(err, user) {
-  // });
-  done(null, user);
-});
-
-var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-var LocalStrategy = require("passport-local").Strategy;
 
 // 認証処理の定義
 passport.use(
-  new LocalStrategy(function (username, password, done) {
+  new LocalStrategy((username, password, done) => {
     const hashedPassword = bcrypt.hashSync("password", 10);
-    console.log('"password"をハッシュ化:', hashedPassword);
-    console.log(
-      'bcrypt.compare("password", hashedPassword):',
-      bcrypt.compareSync("password", hashedPassword)
-    );
+    // console.log('"password"をハッシュ化:', hashedPassword);
+    // console.log(
+    //   'bcrypt.compare("password", hashedPassword):',
+    //   bcrypt.compareSync("password", hashedPassword)
+    // );
 
     // if (username == "admin" && password == "password") {
     if (
@@ -42,17 +33,30 @@ passport.use(
     ) {
       return done(null, username);
     } else {
-      return done(null, false);
+      return done(null, false, {
+        message: "ユーザーIDまたはパスワードが間違っています。",
+      });
     }
   })
 );
+
+// シリアライズとデシリアライズを設定
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  // User.findById(id, function(err, user) {
+  // });
+  done(null, user);
+});
 
 // EJS設定
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
 // ログインページ
-app.get("/", function (req, res) {
+app.get("/", (req, res) => {
   res.render("login", {});
 });
 
@@ -63,13 +67,14 @@ app.post(
     successRedirect: "/secret",
     failureRedirect: "/",
     failureFlash: true,
+    badRequestMessage: "「メールアドレス」と「パスワード」は必須入力です。",
   })
 );
 
 // 認証確認
-function isAuthenticated(req, res, next) {
-  // console.log("ここreq.isAuthenticated():", req.isAuthenticated());
-  // console.log("ここreq:", req);
+const isAuthenticated = (req, res, next) => {
+  // console.log("req.isAuthenticated():", req.isAuthenticated());
+  // console.log("req:", req);
   if (req.isAuthenticated()) {
     // 認証済
     return next();
@@ -77,23 +82,15 @@ function isAuthenticated(req, res, next) {
     // 認証されていない
     res.redirect("/"); // ログイン画面に遷移
   }
-}
+};
 
 // 認証後ページ
-// app.get("/secret", function (req, res) {
-//   if ("passport" in req.session && "user" in req.session.passport) {
-//     res.render("secret", {});
-//   } else {
-//     res.redirect("/");
-//   }
-// });
-app.get("/secret", isAuthenticated, function (req, res) {
+app.get("/secret", isAuthenticated, (req, res) => {
   res.render("secret", {});
 });
 
 app.get("/page1", isAuthenticated, (req, res) => {
   res.render("page1", {});
-  // res.send("Hello page1!!!");
 });
 
 app.get("/page2", isAuthenticated, (req, res) => {
@@ -109,4 +106,6 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-app.listen(3456, function () {});
+const server = app.listen(process.env.PORT || 3456, function () {
+  console.log(`=> Listening on http://localhost:${server.address().port}`);
+});
