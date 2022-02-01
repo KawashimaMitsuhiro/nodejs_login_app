@@ -1,8 +1,6 @@
 var express = require("express");
+const bcrypt = require("bcrypt");
 var app = express();
-
-// authorization
-require("./config/passport")(app);
 
 var passport = require("passport");
 app.use(passport.initialize());
@@ -28,7 +26,20 @@ var LocalStrategy = require("passport-local").Strategy;
 // 認証処理の定義
 passport.use(
   new LocalStrategy(function (username, password, done) {
-    if (username == "admin" && password == "password") {
+    const hashedPassword = bcrypt.hashSync("password", 10);
+    console.log('"password"をハッシュ化:', hashedPassword);
+    console.log(
+      'bcrypt.compare("password", hashedPassword):',
+      bcrypt.compareSync("password", hashedPassword)
+    );
+
+    // if (username == "admin" && password == "password") {
+    if (
+      username == "admin" &&
+      password == "password" &&
+      // "password"とハッシュ化した"password"の同一性を確認できるのか検討=>結果：できた
+      bcrypt.compareSync("password", hashedPassword)
+    ) {
       return done(null, username);
     } else {
       return done(null, false);
