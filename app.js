@@ -1,6 +1,9 @@
 var express = require("express");
 var app = express();
 
+// authorization
+require("./config/passport")(app);
+
 var passport = require("passport");
 app.use(passport.initialize());
 
@@ -9,34 +12,14 @@ app.use(session({ secret: "123456" }));
 app.use(passport.session());
 
 passport.serializeUser(function (user, done) {
-  done(null, user.id);
-});
-
-passport.deserializeUser(async function (id, done) {
-  await User.findById(id, function (err, user) {
-    done(err, user);
-  });
-});
-
-passport.serializeUser(function (user, done) {
   done(null, user);
 });
 
-// passport.deserializeUser(function (user, done) {
-//   // console.log("ああああああああああああああ");
-//   User.findById(id, function (err, user) {
-//     done(err, user);
-//   });
-// });
-
-// passport.serializeUser(function (user, done) {
-//   done(null, user);
-// });
-// passport.deserializeUser(function (id, done) {
-//   User.findById(id, function (err, user) {
-//     done(err, user);
-//   });
-// });
+passport.deserializeUser(function (user, done) {
+  // User.findById(id, function(err, user) {
+  // });
+  done(null, user);
+});
 
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -72,29 +55,47 @@ app.post(
   })
 );
 
-// 認証後ページ
-app.get("/secret", function (req, res) {
-  if ("passport" in req.session && "user" in req.session.passport) {
-    res.render("secret", {});
+// 認証確認
+function isAuthenticated(req, res, next) {
+  // console.log("ここreq.isAuthenticated():", req.isAuthenticated());
+  // console.log("ここreq:", req);
+  if (req.isAuthenticated()) {
+    // 認証済
+    return next();
   } else {
-    res.redirect("/");
+    // 認証されていない
+    res.redirect("/"); // ログイン画面に遷移
   }
+}
+
+// 認証後ページ
+// app.get("/secret", function (req, res) {
+//   if ("passport" in req.session && "user" in req.session.passport) {
+//     res.render("secret", {});
+//   } else {
+//     res.redirect("/");
+//   }
+// });
+app.get("/secret", isAuthenticated, function (req, res) {
+  res.render("secret", {});
+});
+
+app.get("/page1", isAuthenticated, (req, res) => {
+  res.render("page1", {});
+  // res.send("Hello page1!!!");
+});
+
+app.get("/page2", isAuthenticated, (req, res) => {
+  res.render("page2", {});
+});
+
+app.get("/page3", isAuthenticated, (req, res) => {
+  res.render("page3", {});
+});
+
+app.get("/logout", (req, res) => {
+  req.logout();
+  res.redirect("/");
 });
 
 app.listen(3456, function () {});
-
-// app.get("/", (req, res) => {
-//   res.send("Hello ルートページ!!!");
-// });
-
-// app.get("/page1", (req, res) => {
-//   res.send("Hello page1!!!");
-// });
-
-// app.get("/page2", (req, res) => {
-//   res.send("Hello page2!!!");
-// });
-
-// app.get("/page3", (req, res) => {
-//   res.send("Hello page3!!!");
-// });
